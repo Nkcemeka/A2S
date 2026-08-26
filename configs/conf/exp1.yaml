@@ -1,0 +1,7 @@
+# Here we look at the first set of layers
+defaults:
+  - config
+  - override mapping: map_exp1
+  - _self_
+
+name: "exp1"

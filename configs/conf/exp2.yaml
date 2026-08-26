@@ -1,0 +1,7 @@
+# Here we use the audio layers of [11, 17, 23] for omar
+defaults:
+  - config
+  - override mapping: map_exp2
+  - _self_
+
+name: "exp2"

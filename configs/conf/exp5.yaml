@@ -1,0 +1,7 @@
+# Here we try a lower embed dimension
+defaults:
+  - config
+  - override adapter: adapter_exp5
+  - _self_
+
+name: "exp5"

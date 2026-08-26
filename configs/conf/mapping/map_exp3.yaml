@@ -1,0 +1,4 @@
+# We pick the middle layers
+_target_: models.mapping.MapConfig
+sym_layers: [5]
+aud_layers: [11]

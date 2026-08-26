@@ -1,0 +1,32 @@
+# General config details
+XML_DIR: "/home/nkcemeka/Documents/Datasets/MelodyT5/t5_xml"
+
+# Synthesis config details
+SYNTHESIS:  "fluidsynth"
+SOUNDFONT: "/home/nkcemeka/Documents/Soundfonts/MuseScore_General.sf2"
+MUSESCORE_PATH: "/home/nkcemeka/bin/musescore"
+SAMPLE_RATE: 24000
+AUDIO_LENGTH: 20
+CUMULATIVE: False
+
+# Excerpt config
+EXCERPT_FLAG: True # Do we extract excerpts from the musicxml files?
+EXCERPTS_XML_DIR: "/home/nkcemeka/Documents/Datasets/MelodyT5/excerpts/piano/xml"
+EXCERPTS_AUDIO_DIR: "/home/nkcemeka/Documents/Datasets/MelodyT5/excerpts/piano/audio"
+EXCERPTS_MIDI_DIR: "/home/nkcemeka/Documents/Datasets/MelodyT5/excerpts/piano/midi"
+EXCERPTS_ABC_DIR: "/home/nkcemeka/Documents/Datasets/MelodyT5/excerpts/piano/abc"
+EXCERPTS_ABC_IL_DIR: "/home/nkcemeka/Documents/Datasets/MelodyT5/excerpts/piano/abc_il"
+PROG: "piano"
+STRIP_REPEAT: True
+FLAG_MIDI: True
+FLAG_ABC: True
+FLAG_ABC_IL: True
+FLAG_AUDIO: True
+NUM_MEASURES: [5]
+PART_IDX: 0
+
+# Audio samples extraction config
+AUDIO_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/MelodyT5/excerpts/piano/audio"
+OUT_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/MelodyT5/excerpts/piano/samples"

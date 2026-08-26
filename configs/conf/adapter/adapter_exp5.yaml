@@ -1,0 +1,11 @@
+# For experiment 5, embedding dimension is set to 64
+_target_: "models.adapter.Adapter"
+in_dim: 1024
+proj_dim: 512
+embed_dim: 64
+num_heads: 4
+dropout: 0.1
+max_len: 1501
+q_in_dim: 768
+gate_init: 1.0
+projector: "linear"

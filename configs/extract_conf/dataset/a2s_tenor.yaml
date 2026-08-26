@@ -1,0 +1,10 @@
+# Audio samples extraction config
+SAMPLE_RATE: 24000
+AUDIO_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/real/tenor/"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/fluidsynth/tenor/"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/mididdsp/tenor/"
+OUT_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples/real/tenor"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples/fluidsynth/tenor"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples/mididdsp/alto"

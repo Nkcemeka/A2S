@@ -1,0 +1,8 @@
+# Here we run the model with char lora
+defaults:
+  - config
+  - _self_
+
+use_lora_patch: False
+use_lora_char: True
+name: "exp9"

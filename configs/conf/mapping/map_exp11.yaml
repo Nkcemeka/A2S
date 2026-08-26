@@ -1,0 +1,4 @@
+# Reverse mapping
+_target_: models.mapping.MapConfig
+sym_layers: [0, 5, 11]
+aud_layers: [23, 17, 0]

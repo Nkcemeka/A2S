@@ -1,0 +1,20 @@
+defaults:
+  - augmentations: base
+  - dm: peft_nott_alto
+  - mapping: base
+  - lora: base
+  - feature: omar
+  - adapter: base
+  - _self_
+
+model_type: "small"
+batch_size: 16
+num_workers: 4
+use_lora_patch: True
+use_lora_char: True
+name: "default"
+max_epochs: 300
+resume: False
+resume_ckpt: null
+pair_loss_flag: True
+pair_loss_margin: 0.05

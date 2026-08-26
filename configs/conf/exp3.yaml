@@ -1,0 +1,7 @@
+# Here we use one audio layer (maybe the middle one)???
+defaults:
+  - config
+  - override mapping: map_exp3
+  - _self_
+
+name: "exp3"

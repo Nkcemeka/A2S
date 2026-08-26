@@ -1,0 +1,7 @@
+# Here we do a reverse mapping configuration for omar
+defaults:
+  - config
+  - override mapping: map_exp11
+  - _self_
+
+name: "exp11"

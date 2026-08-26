@@ -1,0 +1,8 @@
+venv/
+ckpts/
+__pycache__/
+runs/
+*_logs/
+outputs/
+tboard/
+*_runs/

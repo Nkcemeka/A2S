@@ -1,0 +1,8 @@
+# Here we run the model with no LORA
+defaults:
+  - config
+  - _self_
+
+use_lora_patch: False
+use_lora_char: False
+name: "exp10"

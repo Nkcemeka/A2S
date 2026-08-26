@@ -1,0 +1,5 @@
+# We pick the first, middle and last layers of the sym
+# and for the aud_models, we do the same for the later half of the layers
+_target_: models.mapping.MapConfig
+sym_layers: [0, 5, 11]
+aud_layers: [11, 17, 23]

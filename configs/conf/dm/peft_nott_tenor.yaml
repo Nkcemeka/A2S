@@ -1,0 +1,5 @@
+_target_: datamodules.peft_dm.PeftDataModule
+samples_dir: "/home/nkcemeka/Documents/Datasets/Nottingham/excerpts/tenor/samples"
+abc_dir: "/home/nkcemeka/Documents/Datasets/Nottingham/excerpts/tenor/abc_il"
+percent_split: 0.8
+aug_flag: True

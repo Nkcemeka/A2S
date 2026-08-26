@@ -1,0 +1,31 @@
+# Augmentation configuration file
+eq1:
+  min_gain_db: -10.0
+  max_gain_db: -5
+  p: 0.5
+
+eq2:
+  min_gain_db: -10.0
+  max_gain_db: -5
+  p: 0.5
+
+gaussian_noise:
+  min_snr_db: 17.0
+  max_snr_db: 25.0
+  p: 0.5
+
+pitch_shift:
+  min_semitones: -0.02
+  max_semitones: 0.02
+  p: 0.5
+
+reverb:
+  min_target_rt60: 0.15
+  max_target_rt60: 0.40
+  p: 0.5
+
+gain:
+  min_gain_db: -15.0
+  max_gain_db: 15.0
+  p: 0.5
+

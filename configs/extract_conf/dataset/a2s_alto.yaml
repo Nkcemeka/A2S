@@ -1,0 +1,10 @@
+# Audio samples extraction config
+SAMPLE_RATE: 24000
+AUDIO_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/real/alto/"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/fluidsynth/alto/"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/mididdsp/alto/"
+OUT_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples/real/alto"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples/fluidsynth/alto"
+  - "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples/mididdsp/alto"

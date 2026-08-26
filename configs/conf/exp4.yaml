@@ -1,0 +1,7 @@
+# Here we try 8 adapter heads
+defaults:
+  - config
+  - override adapter: adapter_exp4
+  - _self_
+
+name: "exp4"

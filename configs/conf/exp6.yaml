@@ -1,0 +1,7 @@
+# Here we train without the pair loss
+defaults:
+  - config
+  - _self_
+
+name: "exp6"
+pair_loss_flag: False

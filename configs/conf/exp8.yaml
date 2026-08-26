@@ -1,0 +1,8 @@
+# Here we run the model with patch lora
+defaults:
+  - config
+  - _self_
+
+use_lora_patch: True
+use_lora_char: False
+name: "exp8"

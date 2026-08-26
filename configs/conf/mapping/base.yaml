@@ -1,0 +1,4 @@
+# Mapping configuration file (zero-based indexing)
+_target_: models.mapping.MapConfig
+sym_layers: [0, 5, 11]
+aud_layers: [0, 11, 23]

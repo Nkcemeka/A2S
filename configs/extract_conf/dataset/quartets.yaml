@@ -1,0 +1,6 @@
+# Audio samples extraction config
+SAMPLE_RATE: 24000
+AUDIO_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/Quartets/excerpts/bhove/audio"
+OUT_DIRS:
+  - "/home/nkcemeka/Documents/Datasets/Quartets/excerpts/bhove/samples"

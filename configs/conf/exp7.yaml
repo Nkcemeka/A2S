@@ -1,0 +1,7 @@
+# Here we perform zero-gate init
+defaults:
+  - config
+  - override adapter: adapter_exp7
+  - _self_
+
+name: "exp7"

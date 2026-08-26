@@ -1,0 +1,4 @@
+ckpt_path: "/home/nkcemeka/Documents/midi-function-alignment/ckpt/cp_transformer_v0.42_size1_batch_48_schedule.epoch=00.fin.ckpt"
+MFunc.midi_pt: "/home/nkcemeka/Documents/trans_peft/nottingham/melody_window/train/nott.pt"
+MFunc.base_dir: "/home/nkcemeka/Documents/trans_peft/nottingham/melody_window/train"
+feat_name: "mfunc"

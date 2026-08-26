@@ -1,0 +1,6 @@
+# Lora config
+_target_: models.lora.LORAConfig
+r: 16
+lora_alpha: 32
+target_modules: ["c_attn"]
+lora_dropout: 0.4
