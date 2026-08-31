@@ -277,7 +277,11 @@ class NotagenEval:
 @hydra.main(config_path="configs/conf", \
     config_name="config.yaml", version_base="1.4")
 def main(cfg: DictConfig):
-    run_dir = Path(__file__).parent / f"runs/{cfg.name}"
+    if "partition_num" in cfg.dm:
+        run_dir = Path(__file__).parent / f"runs/{cfg.name}/f{cfg.dm.partition_num}"
+    else:
+        run_dir = Path(__file__).parent / f"runs/{cfg.name}"
+        
     best_ckpt = get_best_checkpoint(run_dir)
     cfg.resume_ckpt = best_ckpt
     eval_obj = NotagenEval(cfg)
@@ -300,6 +304,10 @@ def main(cfg: DictConfig):
             lines = f.readlines()
             for line in lines:
                 samp_path, abc_path = line.strip().split('\t')
+                if not Path(samp_path).exists() or not Path(abc_path).exists():
+                    return RuntimeError(f"Skipping {samp_path} or {abc_path} as they do not exist.")
+                    print(f"Skipping {samp_path} or {abc_path} as they do not exist.")
+                    continue
                 gt_files.append(abc_path)
                 test_files.append(samp_path)
 
@@ -308,6 +316,7 @@ def main(cfg: DictConfig):
 
         # save the metrics to a file
         print(mv2h_metrics)
+        print(len(gt_files), len(test_files))
         exit(1)
         with open(partition / "mv2h_metrics.txt", "w") as f:
             for key, value in mv2h_metrics.items():

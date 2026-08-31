@@ -1,3 +1,4 @@
+from pyroomacoustics import transform
 import torch
 from torch.utils.data import Dataset
 from models.notagen import Patchilizer
@@ -9,9 +10,11 @@ from audiomentations import (
     AddGaussianSNR,
     PitchShift,
     RoomSimulator,
-    Gain
+    Gain,
+    OneOf,
 )
 from omegaconf import DictConfig
+from utils.general import transpose_abc_il
 
 def collate_batch_samples(input_batches):
     input_sample, input_sample_length, input_gt, input_gt_mask = zip(*input_batches)
@@ -38,53 +41,78 @@ def collate_batch_samples(input_batches):
 class Augmentation:
     def __init__(self, cfg: DictConfig):
         self.cfg = cfg
+        # Define allowed transpose shifts
+        allowed_shifts = [-4, -3, -2, -1, 0, 1, 2, 3, 4]  # Allowed pitch shifts in semitones
 
-        # Define augmentations
-        self.augmentObj = Compose([
-            # EQ #1 — independently applied with p=0.5
-            SevenBandParametricEQ(
-                min_gain_db=self.cfg.eq1.min_gain_db,
-                max_gain_db=self.cfg.eq1.max_gain_db,
-                p=self.cfg.eq1.p,
-            ),
+        # EQ #1 — independently applied with p=0.5
+        eq_1 = SevenBandParametricEQ(
+                        min_gain_db=self.cfg.eq1.min_gain_db,
+                        max_gain_db=self.cfg.eq1.max_gain_db,
+                        p=self.cfg.eq1.p,
+        )
 
-            # EQ #2 — independently applied with p=0.5
-            SevenBandParametricEQ(
-                min_gain_db=self.cfg.eq2.min_gain_db,
-                max_gain_db=self.cfg.eq2.max_gain_db,
-                p=self.cfg.eq2.p,
-            ),
+        # EQ #2 — independently applied with p=0.5
+        eq_2 = SevenBandParametricEQ(
+                        min_gain_db=self.cfg.eq2.min_gain_db,
+                        max_gain_db=self.cfg.eq2.max_gain_db,
+                        p=self.cfg.eq2.p,
+        )
 
-            # Gaussian noise — independently applied with p=0.5
-            AddGaussianSNR(
-                min_snr_db=self.cfg.gaussian_noise.min_snr_db,
-                max_snr_db=self.cfg.gaussian_noise.max_snr_db,
-                p=self.cfg.gaussian_noise.p,
-            ),
+        # Gaussian noise — independently applied with p=0.5
+        gaussian_snr = AddGaussianSNR(
+                        min_snr_db=self.cfg.gaussian_noise.min_snr_db,
+                        max_snr_db=self.cfg.gaussian_noise.max_snr_db,
+                        p=self.cfg.gaussian_noise.p,
+        )
 
-            # Pitch shift: +/- 2 cents
-            PitchShift(
-                min_semitones=self.cfg.pitch_shift.min_semitones,
-                max_semitones=self.cfg.pitch_shift.max_semitones,
-                p=self.cfg.pitch_shift.p,
-            ),
+        #Pitch shift: +/- 2 cents
+        pitch_shift = PitchShift(
+                        min_semitones=self.cfg.pitch_shift.min_semitones,
+                        max_semitones=self.cfg.pitch_shift.max_semitones,
+                        p=self.cfg.pitch_shift.p,
+                    )
 
-            # Reverb
-            RoomSimulator(
-                min_target_rt60=self.cfg.reverb.min_target_rt60,
-                max_target_rt60=self.cfg.reverb.max_target_rt60,
-                calculation_mode="rt60",
-                leave_length_unchanged=True,
-                p=self.cfg.reverb.p,
-            ),
+        # Transpose
+        transpose = OneOf([
+            # Force min and max to be the exact same integer value
+            PitchShift(min_semitones=semitone, max_semitones=semitone, p=1.0)
+            for semitone in allowed_shifts
+        ], p=0.8), # Overall probability of applying a pitch shift
 
-            # Gain
-            Gain(
-                min_gain_db=self.cfg.gain.min_gain_db,
-                max_gain_db=self.cfg.gain.max_gain_db,
-                p=self.cfg.gain.p,
-            ),
-        ])
+        # Reverb
+        reverb = RoomSimulator(
+            min_target_rt60=self.cfg.reverb.min_target_rt60,
+            max_target_rt60=self.cfg.reverb.max_target_rt60,
+            calculation_mode="rt60",
+            leave_length_unchanged=True,
+            p=self.cfg.reverb.p,
+        )
+
+        # Gain
+        gain = Gain(
+            min_gain_db=self.cfg.gain.min_gain_db,
+            max_gain_db=self.cfg.gain.max_gain_db,
+            p=self.cfg.gain.p,
+        )
+
+        if not self.cfg.transpose:
+            self.augmentObj = Compose([
+                eq_1,
+                eq_2,
+                gaussian_snr,
+                pitch_shift,
+                reverb,
+                gain,
+            ])
+        else:
+            self.augmentObj = Compose([
+                eq_1,
+                eq_2,
+                gaussian_snr,
+                transpose,
+                reverb,
+                gain,
+            ])
 
 # Create a PeftDataset class
 class PeftDataset(Dataset):
@@ -125,12 +153,18 @@ class PeftDataset(Dataset):
         if peak > 0:
             sample = sample / peak
 
-        # perform augmentation
         if self.augmentObj is not None:
             # Added this after training...but should be for training
             # and not validation actually
             sample = torch.Tensor(self.augmentObj(sample.cpu().detach().numpy(), \
                     sample_rate=self.sample_rate))
+            for block in self.augmentObj.transforms:
+                if isinstance(block, OneOf):
+                    for transform in block.transforms:
+                        if isinstance(transform, \
+                            PitchShift) and transform.parameters.get("should_apply"):
+                            shift = int(transform.parameters.get("num_semitones"))
+                            abc = transpose_abc_il(abc, shift)
 
         sample_length = sample.shape[-1]
         if self.train:

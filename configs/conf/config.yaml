@@ -13,7 +13,7 @@ num_workers: 4
 use_lora_patch: True
 use_lora_char: True
 name: "default"
-max_epochs: 300
+max_epochs: -1
 resume: False
 resume_ckpt: null
 pair_loss_flag: True

@@ -5,6 +5,9 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pathlib import Path
 import hydra
 from omegaconf import DictConfig
+from pytorch_lightning import seed_everything
+
+seed_everything(42, workers=True)
 
 @hydra.main(config_path="configs/conf", \
     config_name="config.yaml", version_base="1.4")
@@ -12,15 +15,22 @@ def main(cfg: DictConfig):
     dm = hydra.utils.instantiate(cfg.dm, aug_cfg=cfg.augmentations, 
         store_split_dir=Path(__file__).parent / f"runs/{cfg.name}",
         batch_size=cfg.batch_size, num_workers=cfg.num_workers)
+
     model = NotagenPeft(feat_name=cfg.feature.feat_name, model_type=cfg.model_type, \
         use_lora_patch=cfg.use_lora_patch, use_lora_char=cfg.use_lora_char, lora_cfg=cfg.lora, \
         map_cfg=cfg.mapping, adapter_cfg=cfg.adapter, \
         pair_loss_flag=cfg.pair_loss_flag, pair_loss_margin=cfg.pair_loss_margin)
 
+    # if cfg.partition_num is not None then dirpath should be set to runs/{cfg.name}/partition_{cfg.partition_num}
+    if "partition_num" in cfg.dm:
+        dirpath = Path(__file__).parent / f"runs/{cfg.name}/f{cfg.dm.partition_num}"
+    else:
+        dirpath = Path(__file__).parent / f"runs/{cfg.name}"
+
     checkpoint_callback = ModelCheckpoint(
             monitor='val_loss',
             filename='icassp-{epoch:02d}-{val_loss:.4f}',
-            dirpath=str(Path(__file__).parent / f"runs/{cfg.name}"),
+            dirpath=str(dirpath),
             save_top_k=5,
             save_last=True,
             mode="min"
@@ -28,7 +38,7 @@ def main(cfg: DictConfig):
 
     early_stop_callback = EarlyStopping(
         monitor="val_loss",
-        patience=10,
+        patience=5,
         mode="min",
     )
 

@@ -1,0 +1,15 @@
+_target_: datamodules.peft_nott_a2s_dm.PeftNottA2SDataModule
+samples_dir: "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples"
+nott_samples_dir: "/home/nkcemeka/Documents/Datasets/Nottingham/excerpts/alto/samples"
+nott_abc_dir: "/home/nkcemeka/Documents/Datasets/Nottingham/excerpts/alto/abc_il"
+hours: 5.0
+percent_split: 0.9
+abc_dir: "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/abc_il"
+sax_type: "alto"
+partition_dir: "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/partitions"
+train_id: ["mididdsp", "real"]
+theta: [1.0, 0.1]
+val_id: "mididdsp"
+test_id: "real"
+aug_flag: True
+partition_num: 1

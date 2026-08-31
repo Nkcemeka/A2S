@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import gin
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len):
@@ -73,7 +72,6 @@ class LowRankMultiheadAttention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous().view(batch_size, -1, self.embed_dim)
         return self.out_proj(attn_output) * self.gates
 
-@gin.configurable
 class Adapter(nn.Module):
     def __init__(self, in_dim:int, proj_dim:int, embed_dim:int, num_heads:int, \
             dropout:float=0.0, max_len:int=1501, \

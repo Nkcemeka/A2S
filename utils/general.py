@@ -13,8 +13,9 @@ from copy import deepcopy
 from .convxml2abc import interleaved_process_file, convert_file_xml2abc
 import soundfile as sf
 import re
-from abctoolkit.utils import Barline_regexPattern
+from abctoolkit.utils import Barline_regexPattern, extract_global_and_local_metadata
 from abctoolkit.duration import calculate_bartext_duration
+from abctoolkit.transpose import Key2index, Key2Mode, transpose_a_voice, lookup_new_keymode_to_transpose
 
 def rest_unreduce(abc_lines):
     tunebody_index = None
@@ -588,3 +589,266 @@ def postprocess_abc(abc: str):
         clean_lines.append(line)
 
     return '\n'.join(clean_lines)
+
+
+def transpose_key(original_key, semitones):
+    """
+    Transpose an ABC key by a number of semitones while
+    preserving the mode.
+
+    Examples:
+        C   + 2 -> D
+        C   - 2 -> Bb
+        Am  + 2 -> Bm
+        Dm  - 2 -> Cm
+    """
+    Index2Key = {
+        index: key
+        for key, index in Key2index.items()
+        if index not in [1, 11]
+    }
+
+    # Separate tonic from mode
+    match = re.match(r"^([A-Ga-g][#b]?)(.*)$", original_key)
+
+    if not match:
+        raise ValueError(f"Invalid key: {original_key}")
+
+    tonic = match.group(1)
+    mode = match.group(2)
+
+    if tonic not in Key2index:
+        raise ValueError(f"Unknown key: {tonic}")
+
+    original_index = Key2index[tonic]
+    destination_index = (original_index + semitones) % 12
+
+    # Preferred enharmonic spellings
+    preferred_keys = {
+        0: "C",
+        1: "Db",
+        2: "D",
+        3: "Eb",
+        4: "E",
+        5: "F",
+        6: "Gb",
+        7: "G",
+        8: "Ab",
+        9: "A",
+        10: "Bb",
+        11: "B",
+    }
+
+    destination_tonic = preferred_keys[destination_index]
+
+    return destination_tonic + mode
+
+
+def extract_metadata_and_tunebody(abc_lines: list):
+    # 分割为 metadata 和 tunebody
+    tunebody_index = None
+    for i, line in enumerate(reversed(abc_lines)):
+        if line.strip() == 'V:1':
+            tunebody_index = len(abc_lines) - 1 - i
+            break
+    if tunebody_index is None:
+        raise Exception('tunebody index not found.')
+
+    metadata_lines = abc_lines[:tunebody_index]
+    tunebody_lines = abc_lines[tunebody_index:]
+
+    return metadata_lines, tunebody_lines
+
+def extract_metadata_and_parts(abc_lines: list):
+
+    metadata_lines, tunebody_lines = extract_metadata_and_tunebody(abc_lines)
+
+    part_symbol_list = []
+    part_text_list = []
+
+    last_start_index = None
+    for i, line in enumerate(tunebody_lines):
+        if i == 0:
+            last_start_index = 1
+            part_symbol_list.append(line.strip())
+            continue
+        if line.startswith('V:'):
+            last_end_index = i
+            part_text_list.append(''.join(tunebody_lines[last_start_index:last_end_index]))
+            part_symbol_list.append(line.strip())
+            last_start_index = i + 1
+    part_text_list.append(''.join(tunebody_lines[last_start_index:]))
+
+    part_text_dict = {}
+    for i in range(len(part_symbol_list)):
+        part_text_dict[part_symbol_list[i]] = part_text_list[i]
+
+    return metadata_lines, part_text_dict
+
+
+def transpose_abc(abc_text: str, shift: int):
+
+    abc_text_lines = abc_text.splitlines()
+    metadata_lines, part_text_dict = extract_metadata_and_parts(abc_text_lines)
+    global_metadata_dict, local_metadata_dict = extract_global_and_local_metadata(metadata_lines)
+    global_key = global_metadata_dict['K'][0]
+
+    des_key = transpose_key(global_key, shift)
+
+    if global_key == 'none':
+        global_key = 'C'
+    for symbol in local_metadata_dict.keys():
+        if 'perc' in local_metadata_dict[symbol]['V']:
+            local_metadata_dict[symbol]['K'] = 'none'
+        elif 'K' not in local_metadata_dict[symbol].keys():
+            local_metadata_dict[symbol]['K'] = global_key
+
+    transposed_abc_text = ''
+    # 开始转调
+    for line in metadata_lines:
+        if line.startswith('K:'):
+            key = line[2:].strip()
+            if key != 'none':
+                transposed_keymode = lookup_new_keymode_to_transpose(key, global_key, des_key)[0]
+            else:
+                transposed_keymode = 'none'
+            transposed_line = 'K:' + transposed_keymode + '\n'
+        else:
+            transposed_line = line
+        transposed_abc_text += transposed_line
+
+    # for i, part_text in enumerate(part_text_list):
+    for symbol, part_text in part_text_dict.items():
+        transposed_abc_text += symbol + '\n'
+        part_ori_key = local_metadata_dict[symbol]['K']
+        if part_ori_key == 'none':
+            transposed_abc_text += part_text
+        else:
+            part_des_key = lookup_new_keymode_to_transpose(part_ori_key, global_key, des_key)[1]
+            transposed_part_text = transpose_a_voice(part_text, part_ori_key, part_des_key)
+            transposed_abc_text += transposed_part_text
+
+    return transposed_abc_text
+
+
+def extract_metadata_and_tunebody_il(abc_lines: list):
+    # 分割为 metadata 和 tunebody
+    tunebody_index = None
+    for i, line in enumerate(abc_lines):
+        if line.startswith('[V:1]'):
+            tunebody_index = i
+            break
+    if tunebody_index is None:
+        raise Exception('tunebody index not found.')
+
+    metadata_lines = abc_lines[:tunebody_index]
+    tunebody_lines = abc_lines[tunebody_index:]
+
+    return metadata_lines, tunebody_lines
+
+def extract_metadata_and_parts_il(abc_lines: list):
+
+    metadata_lines, tunebody_lines = extract_metadata_and_tunebody_il(abc_lines)
+
+    part_symbol_list = []
+    part_text_list = []
+
+    last_start_index = None
+    for i, line in enumerate(tunebody_lines):
+        if line.startswith('[V:'):
+            voice_tag, content = line.split(']', 1)
+            voice_tag += ']'
+            if content != '':
+                part_text_list.append(content)
+                part_symbol_list.append(voice_tag)
+
+    return metadata_lines, part_symbol_list, part_text_list
+
+
+def extract_global_and_local_metadata_il(metadata_lines: list):
+    '''
+    提取 global metadata 和各声部的 local_metadata
+    '''
+    for i, line in enumerate(metadata_lines):
+        if line.startswith('V:'):
+            global_metadata_index = i
+            break
+
+    global_metadata_lines = metadata_lines[ : global_metadata_index]
+    local_metadata_lines = metadata_lines[global_metadata_index : ]
+
+    global_metadata_dict = {}
+    for i, line in enumerate(global_metadata_lines):
+        if line.startswith('%%'):
+            key = line.split()[0]
+            value = line[len(key):].strip()
+            global_metadata_dict[key] = value
+        elif line[0].isalpha and line[1] == ':':
+            key = line[0]
+            if key not in global_metadata_dict.keys():
+                global_metadata_dict[key] = []
+            value = line[2:].strip()
+            global_metadata_dict[key].append(value)
+
+    local_metadata_dict = {}
+    for i, line in enumerate(local_metadata_lines):
+        if line.startswith('V:'):
+            symbol = line.split()[0]
+            local_metadata_dict[symbol] = {}
+            key = 'V'
+            value = line[len(symbol):].strip()
+            local_metadata_dict[symbol][key] = value
+        elif line[0].isalpha and line[1] == ':':
+            key = line[0]
+            value = line[2:].strip()
+            if key not in local_metadata_dict[symbol].keys():
+                local_metadata_dict[symbol][key] = []
+            local_metadata_dict[symbol][key].append(value)
+
+    return global_metadata_dict, local_metadata_dict
+
+
+def transpose_abc_il(abc_text: str, shift: int):
+
+    abc_text_lines = abc_text.splitlines()
+    metadata_lines, part_symbol_list, part_text_list = extract_metadata_and_parts_il(abc_text_lines)
+    global_metadata_dict, local_metadata_dict = extract_global_and_local_metadata_il(metadata_lines)
+    global_key = global_metadata_dict['K'][0]
+
+    des_key = transpose_key(global_key, shift)
+
+    if global_key == 'none':
+        global_key = 'C'
+    for symbol in local_metadata_dict.keys():
+        if 'perc' in local_metadata_dict[symbol]['V']:
+            local_metadata_dict[symbol]['K'] = 'none'
+        elif 'K' not in local_metadata_dict[symbol].keys():
+            local_metadata_dict[symbol]['K'] = global_key
+
+    transposed_abc_text = ''
+    # 开始转调
+    for line in metadata_lines:
+        if line.startswith('K:'):
+            key = line[2:].strip()
+            if key != 'none':
+                transposed_keymode = lookup_new_keymode_to_transpose(key, global_key, des_key)[0]
+            else:
+                transposed_keymode = 'none'
+            transposed_line = 'K:' + transposed_keymode
+        else:
+            transposed_line = line
+        transposed_abc_text += transposed_line + "\n"
+
+    # for i, part_text in enumerate(part_text_list):
+    for symbol, part_text in zip(part_symbol_list, part_text_list):
+        transposed_abc_text += symbol
+        # we do a [1:-1] to exclude the brackets in the symbol, e.g., [V:1] -> V:1
+        part_ori_key = local_metadata_dict[symbol[1:-1]]['K']
+        if part_ori_key == 'none':
+            transposed_abc_text += part_text
+        else:
+            part_des_key = lookup_new_keymode_to_transpose(part_ori_key, global_key, des_key)[1]
+            transposed_part_text = transpose_a_voice(part_text, part_ori_key, part_des_key)
+            transposed_abc_text += transposed_part_text+"\n"
+
+    return transposed_abc_text

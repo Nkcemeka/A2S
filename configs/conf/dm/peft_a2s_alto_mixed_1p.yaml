@@ -1,11 +1,11 @@
 _target_: datamodules.peft_sax_dm.PeftSaxDataModule
 samples_dir: "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/samples"
 abc_dir: "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/abc_il"
-sax_type: "tenor"
+sax_type: "alto"
 partition_dir: "/home/nkcemeka/Documents/Datasets/real_a2s_sax_dataset/partitions"
-train_id: ["real"]
-theta: [1.0]
-val_id: "real"
+train_id: ["mididdsp", "real"]
+theta: [1.0, 0.1]
+val_id: "mididdsp"
 test_id: "real"
 aug_flag: True
 partition_num: 1

@@ -1,0 +1,10 @@
+# Here we use one audio layer (maybe the middle one)???
+# But we do this for the real world dataset (mixed with MIDIDDSP, theta of 0.1)
+defaults:
+  - config
+  - override dm: peft_a2s_alto_mixed_1p
+  - override mapping: map_exp3 # Has same mapping as exp3
+  - _self_
+
+name: "exp13"
+batch_size: 2

@@ -211,7 +211,7 @@ class NotagenInf:
 @hydra.main(config_path="configs/conf", \
     config_name="config.yaml", version_base="1.4")
 def main(cfg: DictConfig):
-    run_dir = Path(__file__).parent / f"runs/{cfg.name}"
+    run_dir = Path(__file__).parent / f"runs/{cfg.name}/f5"
     best_ckpt = get_best_checkpoint(run_dir)
     cfg.resume_ckpt = best_ckpt
     inf_obj = NotagenInf(cfg)

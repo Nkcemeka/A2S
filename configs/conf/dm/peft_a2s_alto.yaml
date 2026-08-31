@@ -8,3 +8,4 @@ theta: [1.0]
 val_id: "real"
 test_id: "real"
 aug_flag: True
+partition_num: 1
